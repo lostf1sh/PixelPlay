@@ -60,11 +60,11 @@ object LyricsUtils {
             return Lyrics(plain = emptyList(), synced = emptyList())
         }
 
-        val syncedLines = mutableListOf<SyncedLine>()
-        val plainLines = mutableListOf<String>()
+        val syncedLines = ArrayList<SyncedLine>()
+        val plainLines = ArrayList<String>()
         var isSynced = false
 
-        lyricsText.lines().forEach { rawLine ->
+        lyricsText.lineSequence().forEach { rawLine ->
             val line = sanitizeLrcLine(rawLine)
             if (line.isEmpty()) return@forEach
 
@@ -81,7 +81,7 @@ object LyricsUtils {
 
                 // Enhanced word-by-word parsing
                 if (text.contains(LRC_WORD_TAG_REGEX)) {
-                    val words = mutableListOf<SyncedWord>()
+                    val words = ArrayList<SyncedWord>()
                     val parts = text.split(LRC_WORD_SPLIT_REGEX)
 
                     for (part in parts) {
@@ -103,8 +103,9 @@ object LyricsUtils {
                     }
 
                     if (words.isNotEmpty()) {
-                        val fullLineText = words.joinToString("") { it.word }
-                        syncedLines.add(SyncedLine(lineTimestamp.toInt(), fullLineText, words))
+                        val fullLineTextBuilder = StringBuilder()
+                        words.forEach { fullLineTextBuilder.append(it.word) }
+                        syncedLines.add(SyncedLine(lineTimestamp.toInt(), fullLineTextBuilder.toString(), words))
                     } else {
                         syncedLines.add(SyncedLine(lineTimestamp.toInt(), text))
                     }
@@ -123,7 +124,7 @@ object LyricsUtils {
                 val mergedLineText = if (last.line.isEmpty()) {
                     stripped
                 } else {
-                    last.line + "\n" + stripped
+                    StringBuilder(last.line).append("\n").append(stripped).toString()
                 }
                 // Conservamos la lista de palabras sincronizadas si existía.
                 val merged = if (last.words.isNotEmpty()) {

@@ -13,6 +13,7 @@ import coil.ImageLoaderFactory
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import timber.log.Timber
+import com.theveloper.pixelplay.BuildConfig
 
 @HiltAndroidApp
 class PixelPlayApplication : Application(), ImageLoaderFactory, Configuration.Provider {
@@ -31,24 +32,24 @@ class PixelPlayApplication : Application(), ImageLoaderFactory, Configuration.Pr
     override fun onCreate() {
         super.onCreate()
 
-//        if (BuildConfig.DEBUG) {
-//            Timber.plant(Timber.DebugTree())
-//            StrictMode.setThreadPolicy(
-//                StrictMode.ThreadPolicy.Builder()
-//                    .detectDiskReads()
-//                    .detectDiskWrites()
-//                    .detectNetwork()
-//                    .penaltyLog()
-//                    .build()
-//            )
-//            StrictMode.setVmPolicy(
-//                StrictMode.VmPolicy.Builder()
-//                    .detectLeakedSqlLiteObjects()
-//                    .detectLeakedClosableObjects()
-//                    .penaltyLog()
-//                    .build()
-//            )
-//        }
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectNetwork()
+                    .penaltyLog()
+                    .build()
+            )
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .build()
+            )
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

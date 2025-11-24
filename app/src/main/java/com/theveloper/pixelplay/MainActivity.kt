@@ -71,7 +71,6 @@ import com.theveloper.pixelplay.data.service.MusicService
 import com.theveloper.pixelplay.presentation.components.MiniPlayerHeight
 import com.theveloper.pixelplay.presentation.components.NavBarContentHeight
 import com.theveloper.pixelplay.presentation.components.UnifiedPlayerSheet
-import com.theveloper.pixelplay.presentation.components.getNavigationBarHeight
 import com.theveloper.pixelplay.presentation.components.AllFilesAccessDialog
 import com.theveloper.pixelplay.presentation.navigation.AppNavigation
 import com.theveloper.pixelplay.presentation.navigation.Screen
@@ -97,8 +96,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -108,24 +105,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
-import com.theveloper.pixelplay.presentation.components.NavBarContentHeight
-import com.theveloper.pixelplay.presentation.components.MiniPlayerHeight
 import com.theveloper.pixelplay.presentation.components.PlayerInternalNavigationBar
 import javax.annotation.concurrent.Immutable
 import androidx.core.net.toUri
 import com.theveloper.pixelplay.presentation.components.DismissUndoBar
-import com.theveloper.pixelplay.presentation.components.NavBarContentHeight
 import com.theveloper.pixelplay.presentation.components.NavBarContentHeightFullWidth
-import kotlin.math.pow
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.lerp
@@ -134,6 +122,7 @@ import com.theveloper.pixelplay.data.preferences.NavBarStyle
 import com.theveloper.pixelplay.data.preferences.UserPreferencesRepository
 import com.theveloper.pixelplay.data.worker.SyncManager
 import com.theveloper.pixelplay.presentation.components.MiniPlayerBottomSpacer
+import com.theveloper.pixelplay.presentation.UiConstants
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 import javax.inject.Inject
 
@@ -359,16 +348,11 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(shouldPotentiallyShowLoading) {
             if (shouldPotentiallyShowLoading) {
-                // Espera un breve período antes de permitir que se muestre el indicador de carga
-                // Ajusta este valor según sea necesario (por ejemplo, 300-500 ms)
-                delay(300L)
-                // Vuelve a verificar la condición después del delay,
-                // ya que el estado podría haber cambiado.
+                delay(UiConstants.LOADING_INDICATOR_DELAY_MS)
                 if (mainViewModel.isSyncing.value && mainViewModel.isLibraryEmpty.value) {
                     canShowLoadingIndicator = true
                 }
             } else {
-                // Si las condiciones ya no se cumplen, asegúrate de que no se muestre
                 canShowLoadingIndicator = false
             }
         }
@@ -431,7 +415,11 @@ class MainActivity : ComponentActivity() {
         val systemNavBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
         val horizontalPadding = if (navBarStyle == NavBarStyle.DEFAULT) {
-            if (systemNavBarInset > 30.dp) 14.dp else systemNavBarInset
+            if (systemNavBarInset > UiConstants.NAV_BAR_INSET_THRESHOLD) {
+                UiConstants.DEFAULT_NAV_BAR_HORIZONTAL_PADDING
+            } else {
+                systemNavBarInset
+            }
         } else {
             0.dp
         }
@@ -453,14 +441,19 @@ class MainActivity : ComponentActivity() {
                     ) {
                         derivedStateOf {
                             if (navBarStyle == NavBarStyle.FULL_WIDTH) {
-                                return@derivedStateOf lerp(32.dp, 26.dp, playerContentExpansionFraction)
+                                return@derivedStateOf lerp(
+                                    UiConstants.PLAYER_FULL_WIDTH_TOP_RADIUS,
+                                    UiConstants.PLAYER_CONTENT_EXPANDED_RADIUS,
+                                    playerContentExpansionFraction
+                                )
                             }
 
                             if (showPlayerContentArea) {
-                                if (playerContentExpansionFraction < 0.2f) {
-                                    lerp(12.dp, 26.dp, (playerContentExpansionFraction / 0.2f).coerceIn(0f, 1f))
+                                if (playerContentExpansionFraction < UiConstants.PLAYER_CONTENT_COLLAPSED_THRESHOLD) {
+                                    val normalizedFraction = (playerContentExpansionFraction / UiConstants.PLAYER_CONTENT_COLLAPSED_THRESHOLD).coerceIn(0f, 1f)
+                                    lerp(UiConstants.PLAYER_CONTENT_COLLAPSED_RADIUS, UiConstants.PLAYER_CONTENT_EXPANDED_RADIUS, normalizedFraction)
                                 } else {
-                                    26.dp
+                                    UiConstants.PLAYER_CONTENT_EXPANDED_RADIUS
                                 }
                             } else {
                                 navBarCornerRadius.dp

@@ -81,10 +81,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.generativeai)
-    implementation(libs.androidx.mediarouter)
-    implementation(libs.play.services.cast.framework)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.androidx.compose.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -182,9 +178,6 @@ dependencies {
     //Wavy slider
     implementation(libs.wavy.slider)
 
-    // Splash Screen API
-    implementation(libs.androidx.core.splashscreen) // O la versión más reciente
-
     //Icons
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
@@ -205,10 +198,6 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     //Audio editing
-    // Spleeter para separación de audio y Amplituda para procesar formas de onda
-    //implementation(libs.tensorflow.lite)
-    //implementation(libs.tensorflow.lite.support)
-    ///implementation(libs.tensorflow.lite.select.tf.ops)
     implementation(libs.amplituda)
 
     // Compose-audiowaveform para la UI
@@ -216,9 +205,6 @@ dependencies {
 
     // Media3 Transformer (ya debería estar, pero asegúrate)
     implementation(libs.androidx.media3.transformer)
-
-    //implementation(libs.pytorch.android)
-    //implementation(libs.pytorch.android.torchvision)
 
     //Checker framework
     implementation(libs.checker.qual)

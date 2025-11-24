@@ -116,30 +116,31 @@ class MusicRepositoryImpl @Inject constructor(
         LogUtils.d(this, "getAlbumById: $id")
         return combine(
             userPreferencesRepository.allowedDirectoriesFlow,
-            userPreferencesRepository.initialSetupDoneFlow
-        ) { allowedDirs, initialSetupDone ->
-            Pair(allowedDirs.toList(), initialSetupDone)
-        }.flatMapLatest { (allowedDirs, initialSetupDone) ->
-            // Check if album has any songs in allowed directories
-            musicDao.getSongsByAlbumId(id) // Assuming this DAO method exists or is added
-                .map { songEntities ->
-                    val permittedSongsInAlbum = songEntities.filter { songEntity ->
-                        if (!initialSetupDone) true // if setup not done, all songs are permitted for this check
-                        else allowedDirs.contains(songEntity.parentDirectoryPath)
-                    }
-                    if (initialSetupDone && allowedDirs.isEmpty() && songEntities.isNotEmpty()) {
-                        null // Setup done, no allowed dirs, so album effectively not accessible
-                    } else if (permittedSongsInAlbum.isNotEmpty() || !initialSetupDone) {
-                        // Album has permitted songs OR initial setup not done (show all)
-                        // Fetch the album details
-                        musicDao.getAlbumById(id).map { it?.toAlbum() }.conflate()
-                    } else {
-                        flowOf(null) // No permitted songs for this album
-                    }
-                }.flatMapLatest { it!! } // Flatten the Flow<Flow<Album?>> to Flow<Album?>
+            userPreferencesRepository.initialSetupDoneFlow,
+            musicDao.getAlbumById(id)
+        ) { allowedDirs, initialSetupDone, albumEntity ->
+            Triple(allowedDirs.toList(), initialSetupDone, albumEntity)
+        }.flatMapLatest { (allowedDirs, initialSetupDone, albumEntity) ->
+            if (albumEntity == null) {
+                flowOf(null)
+            } else {
+                // Check if album has any songs in allowed directories
+                musicDao.getSongsByAlbumId(id)
+                    .map { songEntities ->
+                        val permittedSongsInAlbum = songEntities.filter { songEntity ->
+                            if (!initialSetupDone) true
+                            else allowedDirs.contains(songEntity.parentDirectoryPath)
+                        }
+                        if (initialSetupDone && allowedDirs.isEmpty() && songEntities.isNotEmpty()) {
+                            null
+                        } else if (permittedSongsInAlbum.isNotEmpty() || !initialSetupDone) {
+                            albumEntity.toAlbum()
+                        } else {
+                            null
+                        }
+                    }.conflate()
+            }
         }.flowOn(Dispatchers.IO)
-        // Original simpler version (kept for reference, might be okay depending on requirements):
-        // return musicDao.getAlbumById(id).map { it?.toAlbum() }.flowOn(Dispatchers.IO)
     }
 
     override fun getArtists(): Flow<List<Artist>> {

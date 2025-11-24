@@ -231,6 +231,13 @@ data class PlayerUiState(
     val preparingSongId: String? = null
 )
 
+data class PlayerChromeState(
+    val navBarStyle: String = NavBarStyle.DEFAULT,
+    val navBarCornerRadius: Int = 32,
+    val isPlayerVisible: Boolean = false,
+    val sheetState: PlayerSheetState = PlayerSheetState.COLLAPSED
+)
+
 private data class ExternalSongLoadResult(
     val song: Song,
     val relativePath: String?,

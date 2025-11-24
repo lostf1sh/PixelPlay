@@ -68,9 +68,23 @@ class SyncWorker @AssistedInject constructor(
 
                 // Perform the "clear and insert" operation
                 musicDao.clearAllMusicData()
-                musicDao.insertMusicData(correctedSongs, albums, artists)
+                
+                // Process in batches for better memory management
+                val songBatches = correctedSongs.chunked(SONG_BATCH_SIZE)
+                val albumBatches = albums.chunked(SONG_BATCH_SIZE)
+                val artistBatches = artists.chunked(SONG_BATCH_SIZE)
+                
+                artistBatches.forEach { batch ->
+                    musicDao.insertArtists(batch)
+                }
+                albumBatches.forEach { batch ->
+                    musicDao.insertAlbums(batch)
+                }
+                songBatches.forEach { batch ->
+                    musicDao.insertSongs(batch)
+                }
 
-                Log.i(TAG, "Music data synchronization completed. ${correctedSongs.size} songs processed.")
+                Log.i(TAG, "Music data synchronization completed. ${correctedSongs.size} songs processed in ${songBatches.size} batches.")
             } else {
                 // MediaStore is empty, so clear the local database
                 musicDao.clearAllMusicData()
@@ -240,6 +254,7 @@ class SyncWorker @AssistedInject constructor(
     companion object {
         const val WORK_NAME = "com.theveloper.pixelplay.data.worker.SyncWorker"
         private const val TAG = "SyncWorker"
+        private const val SONG_BATCH_SIZE = 1000
         const val INPUT_FORCE_METADATA = "input_force_metadata" // new key
 
         fun startUpSyncWork(deepScan: Boolean = false) = OneTimeWorkRequestBuilder<SyncWorker>()
